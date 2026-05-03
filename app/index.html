@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Timer Móvil</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --text-secondary: #aaaaaa;
+            /* Colores de cada timer */
+            --color-t1: #ff5252;
+            --color-t2: #448aff;
+            --color-t3: #00e676;
+            --color-t4: #ffd740;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000000;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Contenedor estricto 9:16 */
+        .phone-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: 430px;
+            max-height: 764px; 
+            aspect-ratio: 9 / 16;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid #2c2c2c;
+        }
+
+        /* Vistas generales */
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* === 1. PANTALLA DE INICIO === */
+        #home-view {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .brand-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(45deg, #ff5252, #ffd740);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .selection-label {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 280px;
+            margin-bottom: 20px;
+        }
+
+        .btn-option {
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 20px 0;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-option span {
+            font-size: 0.8rem;
+            font-weight: normal;
+            color: var(--text-secondary);
+        }
+
+        .btn-option:hover {
+            border-color: #666;
+            background-color: #282828;
+        }
+
+        .sp-footer {
+            font-size: 0.75rem;
+            color: #555555;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* === 2. PANTALLA DE NOMBRES === */
+        #names-view {
+            justify-content: center;
+        }
+
+        .names-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .names-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .name-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .name-input-group label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .input-text {
+            background-color: var(--card-bg);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-text:focus {
+            border-color: #ff5252;
+        }
+
+        .btn-submit {
+            background-color: #fff;
+            color: #000;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* === 3. PANTALLA DE TIMERS === */
+        #timers-view {
+            justify-content: space-between;
+        }
+
+        .timers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .timers-grid {
+            display: grid;
+            gap: 12px;
+            flex-grow: 1;
+            margin: 10px 0;
+            min-height: 0;
+        }
+
+        .grid-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+        .grid-2 { grid-template-columns: 1fr; grid-template-rows: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: 1fr; grid-template-rows: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+
+        .timer-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .timer-card.active-timer {
+            animation: borderBlink 1.5s infinite alternate;
+        }
+
+        @keyframes borderBlink {
+            from { border-color: transparent; }
+            to { border-color: currentColor; }
+        }
+
+        .timer-card.alarm-ringing {
+            animation: pulse 0.8s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { background-color: var(--card-bg); }
+            to { background-color: #b71c1c; }
+        }
+
+        .grid-1 .time-display { font-size: 4.5rem; }
+        .grid-2 .time-display { font-size: 3.5rem; }
+        .grid-3 .time-display { font-size: 2.6rem; margin: 2px 0; }
+        .grid-4 .time-display { font-size: 2.3rem; margin: 4px 0; }
+
+        .timer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timer-label {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: currentColor;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .time-display {
+            font-weight: 300;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            color: #ffffff;
+        }
+
+        .input-time-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .input-minutes {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            width: 70px;
+            padding: 6px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-time-group span {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .action-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-start { background-color: #ffffff; color: #121212; }
+        .btn-stop { background-color: #555555; color: #ffffff; }
+        .btn-reset { background-color: #311b92; color: #ffffff; }
+
+        .card-t1 { color: var(--color-t1); }
+        .card-t2 { color: var(--color-t2); }
+        .card-t3 { color: var(--color-t3); }
+        .card-t4 { color: var(--color-t4); }
+
+        .timers-footer {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            justify-content: center;
+            padding-top: 5px;
+        }
+
+        .btn-footer {
+            padding: 12px 4px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: background 0.2s ease;
+            text-align: center;
+        }
+
+        .btn-start-all {
+            background-color: #2e7d32;
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-reset-all {
+            background-color: #1e1e1e;
+            color: var(--text-secondary);
+        }
+
+        .btn-exit {
+            background-color: #b71c1c;
+            color: #ffffff;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+
+        <div class="view" id="home-view">
+            <h1 class="brand-title">MultiTimer</h1>
+            <p class="brand-subtitle">Cocina con precisión</p>
+
+            <p class="selection-label">¿Cuántas cosas cocinas hoy?</p>
+            
+            <div class="options-grid">
+                <button class="btn-option" onclick="selectCount(1)">1 <span>Plato</span></button>
+                <button class="btn-option" onclick="selectCount(2)">2 <span>Platos</span></button>
+                <button class="btn-option" onclick="selectCount(3)">3 <span>Platos</span></button>
+                <button class="btn-option" onclick="selectCount(4)">4 <span>Platos</span></button>
+            </div>
+
+            <div class="sp-footer">SPIng 2026</div>
+        </div>
+
+        <div class="view hidden" id="names-view">
+            <div class="names-header">
+                <h2 style="font-size: 1.3rem;">Nombres de los platos</h2>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">¿Qué vas a preparar?</p>
+            </div>
+
+            <div class="names-list" id="names-input-container">
+                </div>
+
+            <button class="btn-submit" onclick="generateTimers()">Continuar</button>
+        </div>
+
+        <div class="view hidden" id="timers-view">
+            <div class="timers-header">
+                <button class="btn-back" onclick="goToHome()">✕ Menú</button>
+                <span class="header-title">TIMERS COCINA</span>
+                <span style="width: 40px;"></span>
+            </div>
+
+            <div class="timers-grid" id="timers-grid-container">
+                </div>
+
+            <div class="timers-footer">
+                <button class="btn-footer btn-start-all" onclick="startAll()">Iniciar Todos</button>
+                <button class="btn-footer btn-reset-all" onclick="resetAll()">Reiniciar</button>
+                <button class="btn-footer btn-exit" onclick="exitApp()">Salir</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let selectedCount = 0;
+        const timers = {};
+        let femaleVoice = null;
+
+        // Se ejecuta para seleccionar/cargar voces activamente
+        function setupVoices() {
+            if ('speechSynthesis' in window) {
+                const voices = window.speechSynthesis.getVoices();
+                // Priorizar voces explícitamente femeninas en español
+                femaleVoice = voices.find(v => 
+                    v.lang.startsWith('es') && 
+                    (v.name.toLowerCase().includes('female') || 
+                     v.name.toLowerCase().includes('mujer') || 
+                     v.name.toLowerCase().includes('helena') || 
+                     v.name.toLowerCase().includes('sabina') || 
+                     v.name.toLowerCase().includes('zira') || 
+                     v.name.toLowerCase().includes('google') ||
+                     v.name.toLowerCase().includes('monica') ||
+                     v.name.toLowerCase().includes('luciana'))
+                );
+                if (!femaleVoice) {
+                    femaleVoice = voices.find(v => v.lang.startsWith('es'));
+                }
+            }
+        }
+
+        // Activadores de carga de voz del navegador
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = setupVoices;
+            setupVoices();
+        }
+
+        // 1. Al seleccionar el número de temporizadores
+        function selectCount(count) {
+            setupVoices(); // Cargar voces por interacción
+            selectedCount = count;
+            const container = document.getElementById('names-input-container');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= count; i++) {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="name-input-group">
+                        <label for="name-${i}">Nombre del plato ${i}</label>
+                        <input type="text" id="name-${i}" class="input-text" placeholder="El nombre de tu plato" onkeydown="handleEnterKey(event, ${i})">
+                    </div>
+                `);
+            }
+
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('names-view').classList.remove('hidden');
+
+            // Foco inicial en el primer campo
+            setTimeout(() => document.getElementById('name-1').focus(), 100);
+        }
+
+        // Manejar el cambio de input con la tecla Enter
+        function handleEnterKey(event, currentId) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Evitar comportamientos por defecto
+                const nextId = currentId + 1;
+                const nextInput = document.getElementById(`name-${nextId}`);
+                if (nextInput) {
+                    nextInput.focus();
+                } else {
+                    // Si ya está en el último campo de nombre, continuar a la siguiente pantalla
+                    generateTimers();
+                }
+            }
+        }
+
+        // 2. Generar pantalla con timers personalizados
+        function generateTimers() {
+            setupVoices(); 
+            const gridContainer = document.getElementById('timers-grid-container');
+            gridContainer.className = 'timers-grid';
+            gridContainer.classList.add(`grid-${selectedCount}`);
+            gridContainer.innerHTML = '';
+
+            for (let i = 1; i <= selectedCount; i++) {
+                const nameInput = document.getElementById(`name-${i}`);
+                const dishName = nameInput && nameInput.value.trim() !== "" ? nameInput.value : `Plato ${i}`;
+
+                timers[i] = {
+                    secondsRemaining: 0,
+                    originalTime: 0,
+                    interval: null,
+                    isRunning: false,
+                    name: dishName
+                };
+
+                gridContainer.insertAdjacentHTML('beforeend', `
+                    <div class="timer-card card-t${i}" id="card-${i}">
+                        <div class="timer-top">
+                            <span class="timer-label">${dishName}</span>
+                        </div>
+                        <div class="time-display" id="display-${i}">00:00</div>
+                        
+                        <div class="input-time-group" id="input-group-${i}">
+                            <input type="number" id="input-min-${i}" class="input-minutes" min="1" max="999" placeholder="Min" onchange="setProgrammedTime(${i})">
+                            <span>min</span>
+                        </div>
+
+                        <div class="action-controls">
+                            <button class="btn-action btn-start" id="btn-start-${i}" onclick="startTimer(${i})">Iniciar</button>
+                            <button class="btn-action btn-stop" id="btn-stop-${i}" onclick="stopTimer(${i})">Detener</button>
+                            <button class="btn-action btn-reset" onclick="resetTimer(${i})">Borrar</button>
+                        </div>
+                    </div>
+                `);
+            }
+
+            document.getElementById('names-view').classList.add('hidden');
+            document.getElementById('timers-view').classList.remove('hidden');
+        }
+
+        // Leer minutos programados
+        function setProgrammedTime(id) {
+            const input = document.getElementById(`input-min-${id}`);
+            const minutes = parseInt(input.value) || 0;
+            if (minutes > 0) {
+                timers[id].secondsRemaining = minutes * 60;
+                timers[id].originalTime = timers[id].secondsRemaining;
+                updateDisplay(id);
+            }
+        }
+
+        // Iniciar timer
+        function startTimer(id) {
+            setupVoices();
+            const t = timers[id];
+            const input = document.getElementById(`input-min-${id}`);
+            
+            if (t.secondsRemaining === 0 && input.value > 0) {
+                setProgrammedTime(id);
+            }
+
+            if (t.secondsRemaining <= 0 || t.isRunning) return;
+
+            input.disabled = true;
+            t.isRunning = true;
+            document.getElementById(`card-${id}`).classList.add('active-timer');
+
+            t.interval = setInterval(() => {
+                if (t.secondsRemaining > 0) {
+                    t.secondsRemaining--;
+                    updateDisplay(id);
+                } else {
+                    clearInterval(t.interval);
+                    t.isRunning = false;
+                    document.getElementById(`card-${id}`).classList.remove('active-timer');
+                    document.getElementById(`card-${id}`).classList.add('alarm-ringing');
+                    triggerAlarm(id);
+                }
+            }, 1000);
+        }
+
+        // Iniciar todos los temporizadores juntos
+        function startAll() {
+            for (let id in timers) {
+                startTimer(id);
+            }
+        }
+
+        // Detener timer
+        function stopTimer(id) {
+            const t = timers[id];
+            if (!t || !t.isRunning) return;
+
+            clearInterval(t.interval);
+            t.isRunning = false;
+            document.getElementById(`card-${id}`).classList.remove('active-timer');
+        }
+
+        // Borrar timer individual
+        function resetTimer(id) {
+            const t = timers[id];
+            if (!t) return;
+
+            clearInterval(t.interval);
+            t.isRunning = false;
+            t.secondsRemaining = 0;
+            t.originalTime = 0;
+
+            const input = document.getElementById(`input-min-${id}`);
+            if (input) {
+                input.value = '';
+                input.disabled = false;
+            }
+
+            const card = document.getElementById(`card-${id}`);
+            if (card) {
+                card.classList.remove('active-timer', 'alarm-ringing');
+            }
+
+            updateDisplay(id);
+        }
+
+        // Reiniciar todos
+        function resetAll() {
+            for (let id in timers) {
+                resetTimer(id);
+            }
+        }
+
+        // Volver por completo a la pantalla de inicio
+        function goToHome() {
+            resetAll();
+            document.getElementById('timers-view').classList.add('hidden');
+            document.getElementById('names-view').classList.add('hidden');
+            document.getElementById('home-view').classList.remove('hidden');
+        }
+
+        // Cerrar la app
+        function exitApp() {
+            resetAll();
+            window.close();
+            alert("App terminada. Puedes cerrar esta pestaña.");
+        }
+
+        // Formatear segundos a MM:SS
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        // Actualizar pantalla del tiempo
+        function updateDisplay(id) {
+            document.getElementById(`display-${id}`).innerText = formatTime(timers[id].secondsRemaining);
+        }
+
+        // Alerta con voz de mujer (Ajustando tono y cargando dinámicamente)
+        function triggerAlarm(id) {
+            const t = timers[id];
+            const textToSpeak = `${t.name} están listos. `;
+            const repeatedText = textToSpeak.repeat(3);
+
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance(repeatedText);
+                msg.lang = 'es-ES';
+                
+                // Forzar tono agudo (femenino) y velocidad moderada
+                msg.pitch = 1.25; 
+                msg.rate = 0.9;
+
+                // Asignar voz previamente identificada
+                if (femaleVoice) {
+                    msg.voice = femaleVoice;
+                }
+
+                window.speechSynthesis.speak(msg);
+            } else {
+                alert(`¡${t.name} están listos!`);
+            }
+        }
+    </script>
+</body>
+</html>
