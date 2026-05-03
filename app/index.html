@@ -376,6 +376,10 @@
     </style>
 </head>
 <body>
+    <script type="module">
+        import { TextToSpeech } from '@capacitor-community/text-to-speech';
+        window.CapacitorTTS = TextToSpeech;
+    </script>
 
     <div class="phone-container">
 
@@ -659,10 +663,26 @@
         }
 
         // Alerta con voz de mujer (Ajustando tono y cargando dinámicamente)
-        function triggerAlarm(id) {
+        async function triggerAlarm(id) {
             const t = timers[id];
             const textToSpeak = `${t.name} están listos. `;
             const repeatedText = textToSpeak.repeat(3);
+
+            try {
+                if (window.CapacitorTTS) {
+                    await window.CapacitorTTS.speak({
+                        text: repeatedText,
+                        lang: 'es-ES',
+                        rate: 0.9,
+                        pitch: 1.25,
+                        volume: 1.0,
+                        category: 'ambient',
+                    });
+                    return;
+                }
+            } catch (e) {
+                console.warn("Capacitor TTS fallback", e);
+            }
 
             if ('speechSynthesis' in window) {
                 const msg = new SpeechSynthesisUtterance(repeatedText);
