@@ -378,7 +378,9 @@
 <body>
     <script type="module">
         import { TextToSpeech } from '@capacitor-community/text-to-speech';
+        import { KeepAwake } from '@capacitor-community/keep-awake';
         window.CapacitorTTS = TextToSpeech;
+        window.KeepAwake = KeepAwake;
     </script>
 
     <div class="phone-container">
@@ -428,12 +430,38 @@
             </div>
         </div>
 
+        <!-- Keep Awake Status Indicator -->
+        <div id="keep-awake-status" style="position: absolute; bottom: 10px; width: 100%; text-align: center; font-size: 0.65rem; color: #555; pointer-events: none; opacity: 0.8;">
+            Pantalla: Estándar
+        </div>
+
     </div>
 
     <script>
         let selectedCount = 0;
         const timers = {};
         let femaleVoice = null;
+
+        // Keep Awake Logic
+        async function initKeepAwake() {
+            const statusEl = document.getElementById('keep-awake-status');
+            try {
+                if (window.KeepAwake) {
+                    await window.KeepAwake.keepAwake();
+                    if (statusEl) {
+                        statusEl.innerText = "✨ Pantalla siempre activa";
+                        statusEl.style.color = "#00e676";
+                    }
+                    console.log("Keep Awake activated");
+                }
+            } catch (e) {
+                console.warn("Keep Awake failed", e);
+                if (statusEl) statusEl.innerText = "Pantalla: Estándar (No soportado)";
+            }
+        }
+
+        // Initialize Keep Awake on load
+        window.addEventListener('DOMContentLoaded', initKeepAwake);
 
         // Se ejecuta para seleccionar/cargar voces activamente
         function setupVoices() {
